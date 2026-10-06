@@ -12,8 +12,8 @@ export default class Player extends entity {
         this.inputHandler.init();
 
         this.maxSpeed = 300;
-        this.acceleration = 6000;
-        this.friction = 0.8;
+        this.acceleration = 20;
+        this.friction = 0.93;
     }
 
     override render(renderer: Renderer): void {
@@ -30,9 +30,7 @@ export default class Player extends entity {
 
         // Accélération
         if (direction.length > 0) {
-            this.velocity = this.velocity.add(
-                direction.normal.multiply(this.acceleration * deltaTime)
-            );
+            this.velocity = this.velocity.add(direction.normal.multiply(this.acceleration));
         }
 
         // Friction

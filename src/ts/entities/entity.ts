@@ -1,5 +1,5 @@
 import type { Renderer } from "../engine/graphics";
-import { Circle, Rect, vec2 } from "../utils/utils"
+import { Circle, Rect, vec2 } from "../utils/utils";
 import type World from "../world/world";
 
 export default abstract class entity {
@@ -31,17 +31,63 @@ export default abstract class entity {
         renderer.drawCircle(this.hitbox, [0, 255, 0], "relative");
     }
 
-    updateVelocity(deltaTime: number): void {
-    }
+    abstract updateVelocity(deltaTime: number): void;
 
     moveAndCollide(deltaTime: number, world: World): void {
+        let nextPosition = this.position.add(this.velocity.multiply(deltaTime));
+
         for (const object of world.objects) {
-            if (this.hitbox.collidesWithRect(object.hitbox as Rect)) {
-                console.log(object.hitboxType);
+            if (object.hitboxType == "rect") {
+                const rect = object.hitbox as Rect;
+                const closestX = Math.max(rect.x, Math.min(nextPosition.x, rect.x + rect.width));
+                const closestY = Math.max(rect.y, Math.min(nextPosition.y, rect.y + rect.height));
+                const offsetX = nextPosition.x - closestX;
+                const offsetY = nextPosition.y - closestY;
+                const distance = Math.sqrt(offsetX ** 2 + offsetY ** 2);
+
+                if (distance >= this.size) continue;
+
+                let normal: vec2;
+                let penetration: number;
+
+                if (distance > 0) {
+                    normal = new vec2(offsetX / distance, offsetY / distance);
+                    penetration = this.size - distance;
+                } else {
+                    const distances = [
+                        { distance: nextPosition.x - rect.x, normal: new vec2(-1, 0) },
+                        { distance: rect.x + rect.width - nextPosition.x, normal: new vec2(1, 0) },
+                        { distance: nextPosition.y - rect.y, normal: new vec2(0, -1) },
+                        { distance: rect.y + rect.height - nextPosition.y, normal: new vec2(0, 1) },
+                    ];
+                    const nearestEdge = distances.reduce((nearest, edge) =>
+                        edge.distance < nearest.distance ? edge : nearest,
+                    );
+                    normal = nearestEdge.normal;
+                    penetration = this.size + nearestEdge.distance;
+                }
+
+                nextPosition = nextPosition.add(normal.multiply(penetration));
+
+                const velocityIntoSurface = this.velocity.x * normal.x + this.velocity.y * normal.y;
+                if (velocityIntoSurface < 0) {
+                    this.velocity = this.velocity.subtract(normal.multiply(velocityIntoSurface));
+                }
+            } else if (object.hitboxType == "circle") {
+                const circle = object.hitbox as Circle;
+                const offsetX = nextPosition.x - circle.center.x;
+                const offsetY = nextPosition.y - circle.center.y;
+                const distance = Math.sqrt(offsetX ** 2 + offsetY ** 2);
+
+                if (distance < this.size + circle.radius) {
+                    const normal = new vec2(offsetX / distance, offsetY / distance);
+                    const penetration = this.size + circle.radius - distance;
+                    nextPosition = nextPosition.add(normal.multiply(penetration));
+                }
             }
         }
 
-        this.position = this.position.add(this.velocity.multiply(deltaTime));
+        this.position = nextPosition;
     }
 
     update(deltaTime: number, world: World): void {

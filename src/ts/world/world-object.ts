@@ -35,3 +35,17 @@ export class Wall extends WorldObject {
         return new Rect(this.position.x, this.position.y, this.size.x, this.size.y);
     }
 }
+
+export class Barel extends WorldObject {
+    public hitboxType: HitboxType = "circle";
+    public radius: number;
+
+    constructor(position: vec2, radius: number) {
+        super(position);
+        this.radius = radius;
+    }
+
+    get hitbox(): Circle {
+        return new Circle(this.position, this.radius);
+    }
+}
