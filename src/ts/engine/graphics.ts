@@ -37,21 +37,28 @@ export class Renderer {
         return screenRect;
     }
 
-    drawCircle(circle: Circle, color: Color, space: DrawSpace): Circle {
+    drawCircle(circle: Circle, color: Color, space: DrawSpace, fill = true): Circle {
         let screenCircle = circle;
 
         if (this.camera && space === "relative") {
-            const screenCenter = this.camera.worldPosToScreen(circle.center)
+            const screenCenter = this.camera.worldPosToScreen(circle.center);
             screenCenter.x += this.context.canvas.width / 2;
             screenCenter.y += this.context.canvas.height / 2;
 
             screenCircle = new Circle(screenCenter, circle.radius * this.camera.zoom);
         }
 
-        this.context.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] ?? 1})`;
         this.context.beginPath();
         this.context.arc(screenCircle.center.x, screenCircle.center.y, screenCircle.radius, 0, Math.PI * 2);
-        this.context.fill();
+
+        const stringColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] ?? 1})`;
+        if (fill) {
+            this.context.fillStyle = stringColor;
+            this.context.fill();
+        } else {
+            this.context.strokeStyle = stringColor;
+            this.context.stroke();
+        }
 
         return screenCircle;
     }

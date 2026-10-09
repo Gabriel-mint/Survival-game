@@ -1,5 +1,5 @@
 import { Renderer } from "../engine/graphics";
-import { vec2 } from "../utils/utils";
+import { vec2, Rect } from "../utils/utils";
 import entity from "./entity";
 import { keyboardInputHandler, mouseInputHandler } from "../core/input-handler";
 
@@ -20,8 +20,13 @@ export default class Player extends entity {
     }
 
     override render(renderer: Renderer): void {
-        const screenCircle = renderer.drawCircle(this.hitbox, [0, 255, 0], "relative");
-        this.screenPosition = screenCircle.center;
+        const screenRect = renderer.drawRect(
+            new Rect(this.position.x - this.size / 2, this.position.y - this.size, this.size, this.size * 2),
+            [255, 0, 0, 1],
+            "relative",
+            this.orientation,
+        );
+        this.screenPosition = screenRect.center;
     }
 
     override updateVelocity(deltaTime: number): void {
@@ -47,8 +52,10 @@ export default class Player extends entity {
     }
 
     override updateOrientation(): void {
+        if (!this.screenPosition) return;
+
         const mousePos = this.mouseInputHandler.getMousePosition();
-        const directionToMouse = mousePos.subtract(this.position);
+        const directionToMouse = mousePos.subtract(this.screenPosition);
         this.orientation = Math.atan2(directionToMouse.y, directionToMouse.x);
     }
 }

@@ -31,12 +31,17 @@ export default abstract class entity {
 
     abstract render(renderer: Renderer): void;
 
+    renderHitbox(renderer: Renderer): void {
+        renderer.drawCircle(this.hitbox, [0, 255, 0], "relative", false);
+    }
+
     abstract updateVelocity(deltaTime: number): void;
 
     abstract updateOrientation(): void;
 
     display(renderer: Renderer): void {
         this.render(renderer);
+        this.renderHitbox(renderer);
     }
 
     moveAndCollide(deltaTime: number, world: World): void {
