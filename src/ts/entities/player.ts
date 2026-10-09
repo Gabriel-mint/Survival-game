@@ -1,15 +1,18 @@
 import { Renderer } from "../engine/graphics";
 import { vec2 } from "../utils/utils";
 import entity from "./entity";
-import { keyboardInputHandler } from "../core/input-handler";
+import { keyboardInputHandler, mouseInputHandler } from "../core/input-handler";
 
 export default class Player extends entity {
-    private inputHandler: keyboardInputHandler;
+    private keyboardInputHandler: keyboardInputHandler;
+    private mouseInputHandler: mouseInputHandler;
+    private screenPosition: vec2 | null = null;
 
     constructor(position: vec2, size: number) {
         super(position, size);
-        this.inputHandler = new keyboardInputHandler();
-        this.inputHandler.init();
+
+        this.keyboardInputHandler = new keyboardInputHandler();
+        this.mouseInputHandler = new mouseInputHandler();
 
         this.maxSpeed = 300;
         this.acceleration = 20;
@@ -17,16 +20,17 @@ export default class Player extends entity {
     }
 
     override render(renderer: Renderer): void {
-        renderer.drawCircle(this.hitbox, [0, 255, 0], "relative");
+        const screenCircle = renderer.drawCircle(this.hitbox, [0, 255, 0], "relative");
+        this.screenPosition = screenCircle.center;
     }
 
     override updateVelocity(deltaTime: number): void {
         const direction = new vec2(0, 0);
 
-        if (this.inputHandler.isKeyPressed("ArrowUp")) direction.y--;
-        if (this.inputHandler.isKeyPressed("ArrowDown")) direction.y++;
-        if (this.inputHandler.isKeyPressed("ArrowLeft")) direction.x--;
-        if (this.inputHandler.isKeyPressed("ArrowRight")) direction.x++;
+        if (this.keyboardInputHandler.isKeyPressed("ArrowUp")) direction.y--;
+        if (this.keyboardInputHandler.isKeyPressed("ArrowDown")) direction.y++;
+        if (this.keyboardInputHandler.isKeyPressed("ArrowLeft")) direction.x--;
+        if (this.keyboardInputHandler.isKeyPressed("ArrowRight")) direction.x++;
 
         // Accélération
         if (direction.length > 0) {
@@ -40,5 +44,11 @@ export default class Player extends entity {
         if (this.velocity.length > this.maxSpeed) {
             this.velocity = this.velocity.normal.multiply(this.maxSpeed);
         }
+    }
+
+    override updateOrientation(): void {
+        const mousePos = this.mouseInputHandler.getMousePosition();
+        const directionToMouse = mousePos.subtract(this.position);
+        this.orientation = Math.atan2(directionToMouse.y, directionToMouse.x);
     }
 }

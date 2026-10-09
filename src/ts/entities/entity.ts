@@ -4,6 +4,7 @@ import type World from "../world/world";
 
 export default abstract class entity {
     public position: vec2;
+    public orientation: number;
     public size: number;
     public maxSpeed: number;
     public acceleration: number;
@@ -18,6 +19,7 @@ export default abstract class entity {
         this.maxSpeed = 0;
         this.acceleration = 0;
         this.friction = 0;
+        this.orientation = 0;
 
         this.velocity = new vec2(0, 0);
         this.health = 100;
@@ -27,11 +29,15 @@ export default abstract class entity {
         return new Circle(this.position, this.size);
     }
 
-    render(renderer: Renderer): void {
-        renderer.drawCircle(this.hitbox, [0, 255, 0], "relative");
-    }
+    abstract render(renderer: Renderer): void;
 
     abstract updateVelocity(deltaTime: number): void;
+
+    abstract updateOrientation(): void;
+
+    display(renderer: Renderer): void {
+        this.render(renderer);
+    }
 
     moveAndCollide(deltaTime: number, world: World): void {
         let nextPosition = this.position.add(this.velocity.multiply(deltaTime));
@@ -93,5 +99,6 @@ export default abstract class entity {
     update(deltaTime: number, world: World): void {
         this.updateVelocity(deltaTime);
         this.moveAndCollide(deltaTime, world);
+        this.updateOrientation();
     }
 }
